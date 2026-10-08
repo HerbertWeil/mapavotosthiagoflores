@@ -5,9 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa de Votação - Thiago Flores em Vilhena/RO</title>
     
-    <!-- Leaflet CSS & JS via CDNJS -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    
+    <!-- Leaflet Heat Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+    
+    <!-- Chart.js para Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- FontAwesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -22,7 +28,7 @@
             height: 100%;
             width: 100%;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #e2e8f0;
+            background-color: #f1f5f9;
             overflow: hidden;
         }
         #app-container {
@@ -33,72 +39,145 @@
         }
         /* Painel Lateral */
         #sidebar {
-            width: 380px;
+            width: 420px;
             height: 100%;
             background-color: #ffffff;
             border-right: 1px solid #cbd5e1;
             display: flex;
             flex-direction: column;
             z-index: 1000;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 12px rgba(0,0,0,0.15);
         }
         .sidebar-header {
-            padding: 20px;
+            padding: 16px 20px;
             background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
             color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
         .sidebar-header h1 {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .sidebar-header p {
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             opacity: 0.9;
         }
-        /* Cartões do Dashboard */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .btn-export {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .btn-export:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* NAVEGAÇÃO POR ABAS */
+        .tab-nav {
+            display: flex;
+            background: #e2e8f0;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px 4px;
+            text-align: center;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #475569;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #0d47a1;
+            border-bottom-color: #0d47a1;
+        }
+
+        /* CONTEÚDO DAS ABAS */
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+            flex-direction: column;
+        }
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* CARTÕES DO DASHBOARD */
         .stats-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            padding: 12px 15px;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 6px;
+            padding: 10px 12px;
             background-color: #f8fafc;
             border-bottom: 1px solid #e2e8f0;
         }
         .stat-card {
             background: white;
-            padding: 8px 10px;
+            padding: 6px;
             border-radius: 6px;
             border: 1px solid #e2e8f0;
             text-align: center;
         }
         .stat-card .value {
-            font-size: 1.1rem;
+            font-size: 0.98rem;
             font-weight: 800;
             color: #0d47a1;
         }
         .stat-card .label {
-            font-size: 0.7rem;
+            font-size: 0.62rem;
             color: #64748b;
             text-transform: uppercase;
+            font-weight: 600;
         }
-        /* Controled de Pesquisa e Filtros */
+
+        /* FILTROS E PESQUISA */
         .controls {
-            padding: 12px 15px;
+            padding: 10px 12px;
             border-bottom: 1px solid #f1f5f9;
             display: flex;
             flex-direction: column;
             gap: 8px;
+            background: white;
         }
         .search-box {
             position: relative;
         }
         .search-box input {
             width: 100%;
-            padding: 8px 10px 8px 32px;
+            padding: 7px 10px 7px 30px;
             border: 1px solid #cbd5e1;
             border-radius: 6px;
-            font-size: 0.88rem;
+            font-size: 0.82rem;
             outline: none;
         }
         .search-box i {
@@ -108,25 +187,59 @@
             transform: translateY(-50%);
             color: #94a3b8;
         }
+        .filter-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        .filter-btn {
+            flex: 1;
+            padding: 5px 2px;
+            font-size: 0.72rem;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #334155;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background: #0d47a1;
+            color: white;
+            border-color: #0d47a1;
+        }
+        .filter-btn.perf-low.active { background: #ef4444; border-color: #ef4444; }
+        .filter-btn.perf-med.active { background: #f59e0b; border-color: #f59e0b; }
+        .filter-btn.perf-high.active { background: #10b981; border-color: #10b981; }
+
         .sort-select {
-            padding: 8px;
+            padding: 6px;
             border: 1px solid #cbd5e1;
             border-radius: 6px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             background: white;
             outline: none;
         }
-        /* Lista de Locais */
+
+        /* LISTA DE LOCAIS */
         .locations-list {
             flex: 1;
             overflow-y: auto;
-            padding: 10px 15px;
+            padding: 8px 12px;
         }
         .location-item {
-            padding: 10px 12px;
+            padding: 8px 10px;
             border-radius: 6px;
             margin-bottom: 6px;
-            border: 1px solid #f1f5f9;
+            border: 1px solid #e2e8f0;
             background: white;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -143,25 +256,122 @@
             padding-right: 8px;
         }
         .location-name {
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 600;
             color: #1e293b;
         }
         .location-address {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: #64748b;
+        }
+        .location-stats-mini {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-top: 2px;
+            font-size: 0.68rem;
+            color: #475569;
+        }
+        .badge-growth {
+            font-size: 0.65rem;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-weight: 700;
+            background: #dcfce7;
+            color: #15803d;
         }
         .location-badge {
             background-color: #1e88e5;
             color: white;
             font-weight: 700;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             padding: 4px 8px;
             border-radius: 12px;
             min-width: 36px;
             text-align: center;
         }
-        /* Contentor do Mapa */
+
+        /* ABA GRÁFICOS */
+        .charts-container {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .chart-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .chart-card h3 {
+            font-size: 0.85rem;
+            color: #1e293b;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 6px;
+        }
+
+        /* ABA BIOGRAFIA E PROJETOS */
+        .bio-container {
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .profile-card {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+        .profile-card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 2px;
+        }
+        .profile-card p {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        .amount-highlight {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid #22c55e;
+            color: #4ade80;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .project-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-left: 4px solid #1e88e5;
+        }
+        .project-item h4 {
+            font-size: 0.84rem;
+            color: #0f172a;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .project-item p {
+            font-size: 0.75rem;
+            color: #475569;
+            line-height: 1.35;
+        }
+
+        /* MAPA */
         #map-wrapper {
             flex: 1;
             height: 100%;
@@ -175,7 +385,38 @@
             top: 0;
             left: 0;
         }
-        /* Rótulo dos Votos no Centro das Bolas Azuis */
+        .map-mode-toggle {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            padding: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 4px;
+        }
+        .mode-btn {
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            border: none;
+            background: #f1f5f9;
+            color: #475569;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mode-btn.active {
+            background: #0d47a1;
+            color: white;
+        }
+
+        /* RÓTULOS DAS BOLAS AZUIS */
         .vote-circle-label {
             color: #ffffff;
             font-weight: 800;
@@ -195,19 +436,33 @@
             border: none !important;
             border-radius: 6px !important;
             padding: 8px 12px !important;
-            font-size: 0.85rem !important;
+            font-size: 0.82rem !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
         }
+
+        @media print {
+            #map-wrapper, .map-mode-toggle, .tab-nav, .controls, .action-buttons {
+                display: none !important;
+            }
+            #sidebar {
+                width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            body { overflow: visible !important; }
+            .tab-content { display: block !important; }
+        }
+
         @media (max-width: 768px) {
             #app-container {
                 flex-direction: column-reverse;
             }
             #sidebar {
                 width: 100%;
-                height: 40vh;
+                height: 50vh;
             }
             #map-wrapper {
-                height: 60vh;
+                height: 50vh;
             }
         }
     </style>
@@ -215,115 +470,253 @@
 <body>
 
 <div id="app-container">
-    <!-- Painel Lateral -->
+    <!-- PAINEL LATERAL -->
     <div id="sidebar">
         <div class="sidebar-header">
             <h1><i class="fa-solid fa-map-location-dot"></i> Vilhena/RO - Eleições</h1>
             <p>Thiago Leite Flores Pereira (Deputado Federal)</p>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="value">1.380</div>
-                <div class="label">Total Votos</div>
-            </div>
-            <div class="stat-card">
-                <div class="value">34</div>
-                <div class="label">Locais</div>
-            </div>
-            <div class="stat-card">
-                <div class="value">94</div>
-                <div class="label">Maior (IFRO)</div>
-            </div>
-            <div class="stat-card">
-                <div class="value">40,6</div>
-                <div class="label">Média/Local</div>
+            <div class="action-buttons">
+                <button class="btn-export" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Excel / CSV</button>
+                <button class="btn-export" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Imprimir / PDF</button>
             </div>
         </div>
 
-        <div class="controls">
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="Pesquisar escola ou bairro...">
-            </div>
-            <select id="sortSelect" class="sort-select">
-                <option value="votos-desc">Mais Votados Primeiro</option>
-                <option value="votos-asc">Menos Votados Primeiro</option>
-                <option value="nome-asc">Ordem Alfabética</option>
-            </select>
+        <!-- ABAS DE NAVEGAÇÃO -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('tab-locais')"><i class="fa-solid fa-list-check"></i> Locais</button>
+            <button class="tab-btn" onclick="switchTab('tab-graficos')"><i class="fa-solid fa-chart-pie"></i> Gráficos</button>
+            <button class="tab-btn" onclick="switchTab('tab-bio')"><i class="fa-solid fa-user-tie"></i> Biografia</button>
         </div>
 
-        <div class="locations-list" id="locationsList"></div>
+        <!-- ABA 1: LOCAIS E FILTROS -->
+        <div id="tab-locais" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="value">1.380</div>
+                    <div class="label">Votos '26</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">143</div>
+                    <div class="label">Votos '22</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" style="color: #16a34a;">+865%</div>
+                    <div class="label">Evolução</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">34</div>
+                    <div class="label">Locais</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Pesquisar escola, bairro ou distrito...">
+                </div>
+
+                <div class="filter-section-title">Desempenho (Votos 2026)</div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="setPerfFilter('all', this)">Todos</button>
+                    <button class="filter-btn perf-low" onclick="setPerfFilter('low', this)">🔴 &lt;20</button>
+                    <button class="filter-btn perf-med" onclick="setPerfFilter('med', this)">🟡 20-50</button>
+                    <button class="filter-btn perf-high" onclick="setPerfFilter('high', this)">🟢 &gt;50</button>
+                </div>
+
+                <div class="filter-section-title">Zona de Votação</div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="setZoneFilter('all', this)">Todas</button>
+                    <button class="filter-btn" onclick="setZoneFilter('urbana', this)">🏙️ Urbana</button>
+                    <button class="filter-btn" onclick="setZoneFilter('rural', this)">🌾 Rural/Distritos</button>
+                </div>
+
+                <select id="sortSelect" class="sort-select">
+                    <option value="votos-desc">Mais Votados (2026)</option>
+                    <option value="votos-asc">Menos Votados (2026)</option>
+                    <option value="crescimento-desc">Maior Crescimento (2022 ➔ 2026)</option>
+                    <option value="nome-asc">Ordem Alfabética</option>
+                </select>
+            </div>
+
+            <div class="locations-list" id="locationsList"></div>
+        </div>
+
+        <!-- ABA 2: GRÁFICOS INTERATIVOS -->
+        <div id="tab-graficos" class="tab-content">
+            <div class="charts-container">
+                <!-- Gráfico Total Geral -->
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-chart-column"></i> Evolução Total de Votos em Vilhena</h3>
+                    <canvas id="chartEvolucaoTotal" height="130"></canvas>
+                </div>
+
+                <!-- Gráfico Top 10 -->
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-trophy"></i> Top 10 Escolas mais Votadas em 2026</h3>
+                    <canvas id="chartTop10" height="220"></canvas>
+                </div>
+
+                <!-- Gráfico Desempenho -->
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Distribuição por Faixa de Votos</h3>
+                    <canvas id="chartFaixas" height="180"></canvas>
+                </div>
+
+                <!-- Gráfico Comparativo por Local -->
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-code-compare"></i> Comparativo por Local (2022 vs 2026)</h3>
+                    <canvas id="chartComparativoLocais" height="350"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 3: BIOGRAFIA E PROJETOS -->
+        <div id="tab-bio" class="tab-content">
+            <div class="bio-container">
+                <div class="profile-card">
+                    <h2>Thiago Flores</h2>
+                    <p>Deputado Federal por Rondônia | Republicanos</p>
+                    <div class="amount-highlight">
+                        <i class="fa-solid fa-coins"></i> + R$ 6 Milhões Destinados a Vilhena
+                    </div>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-hand-fist" style="color: #0d47a1;"></i> Complexo Esportivo Yawara Judô</h4>
+                    <p>Recursos para fomento e estruturação de centro esportivo e artes marciais voltado à inclusão de crianças e jovens em Vilhena.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-trophy" style="color: #0d47a1;"></i> Competições Esportivas Municipais</h4>
+                    <p>Apoio à Secretaria Municipal de Esportes para realização de campeonatos intercolegiais e regionais na cidade.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-jar" style="color: #0d47a1;"></i> Festival do Mel de Vilhena</h4>
+                    <p>Parceria com a Prefeitura para incentivar a apicultura local, feiras gastronômicas e inovação no agronegócio familiar.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-laptop-code" style="color: #0d47a1;"></i> Cursos de Informática (IFRO & Semed)</h4>
+                    <p>Capacitação digital oferecida por docentes do IFRO em escolas municipais e estaduais para estudantes da rede pública.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-volume-xmark" style="color: #0d47a1;"></i> Sensor Antirruído para Escolas</h4>
+                    <p>Desenvolvimento no IFRO de tecnologia assistiva acústica para salas de aula da rede pública de ensino.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-ribbon" style="color: #0d47a1;"></i> Atendimentos Especializados AMAVI</h4>
+                    <p>Suporte financeiro à Associação de Mães e Amigos dos Autistas de Vilhena para terapias e acompanhamento contínuo.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-hospital" style="color: #0d47a1;"></i> Cirurgias Eletivas e Saúde SUS</h4>
+                    <p>Emendas parlamentares direcionadas para mutirões de exames, consultas e redução da fila de cirurgias no município.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-calculator" style="color: #0d47a1;"></i> Jogos Educativos de Matemática (IFRO)</h4>
+                    <p>Projeto de aprendizagem lúdica de exatas desenvolvido por professores do IFRO para aplicar no ensino fundamental.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-briefcase" style="color: #0d47a1;"></i> Incentivo ao Jovem Aprendiz</h4>
+                    <p>Ações de estímulo à qualificação profissional e inserção de jovens vilhenenses no primeiro emprego formal.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-recycle" style="color: #0d47a1;"></i> Escola do Reúso / Reúso com Arte</h4>
+                    <p>Inauguração de espaço ecológico e oficinas de reciclagem criativa, economia circular e educação ambiental no IFRO.</p>
+                </div>
+
+                <div class="project-item">
+                    <h4><i class="fa-solid fa-house-chimney-crack" style="color: #0d47a1;"></i> Morar + Rural (Águas Claras)</h4>
+                    <p>Recursos para melhoria de habitações rurais, saneamento e qualidade de vida para famílias produtoras de Vilhena.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Área do Mapa -->
+    <!-- ÁREA DO MAPA -->
     <div id="map-wrapper">
+        <div class="map-mode-toggle">
+            <button class="mode-btn active" id="btnModeCircles" onclick="setMapMode('circles')"><i class="fa-solid fa-circle-dot"></i> Círculos</button>
+            <button class="mode-btn" id="btnModeHeat" onclick="setMapMode('heat')"><i class="fa-solid fa-fire"></i> Calor (Heatmap)</button>
+        </div>
         <div id="map"></div>
     </div>
 </div>
 
 <script>
-    // 1. Dados dos Locais de Votação com Coordenadas Geográficas Precisas
+    // 1. Dados Completos dos Locais de Votação (2026 x 2022 e Zonas)
     const locaisData = [
-        { nome: "IFRO - INSTITUTO FEDERAL DE RONDÔNIA", votos: 94, secoes: 10, lat: -12.704216466915664, lon: -60.11910111594381, endereco: "BR-174, KM 03, SN" },
-        { nome: "IVETE BRUSTOLIN - ESCOLA MUNICIPAL", votos: 93, secoes: 17, lat: -12.7238, lon: -60.1228, endereco: "Av. Paraná, 590 - QD 33 Setor 06" },
-        { nome: "COLÉGIO MILITAR TIRADENTES (ZILDA) ESCOLA ESTADUAL", votos: 89, secoes: 19, lat: -12.736752920883914, lon: -60.118557095984585, endereco: "Av. Benno Luiz Graebin, 5900" },
-        { nome: "ALVARES DE AZEVEDO - ESCOLA ESTADUAL", votos: 83, secoes: 16, lat: -12.74326676789688, lon: -60.13876049469356, endereco: "Av. Liberdade, 3950" },
-        { nome: "GENIVAL NUNES - ESCOLA ESTADUAL", votos: 76, secoes: 13, lat: -12.726430932371565, lon: -60.11085947997569, endereco: "Rua 907, 2078 - Setor 09" },
-        { nome: "VILMA VIEIRA - ESCOLA MUNICIPAL", votos: 73, secoes: 8, lat: -12.725393822003523, lon: -60.10629169736809, endereco: "Rua 916, S/N - Nova Vilhena" },
-        { nome: "MARIA ARLETE TOLEDO - ESCOLA ESTADUAL", votos: 67, secoes: 12, lat: -12.732304147476107, lon: -60.11297760777476, endereco: "Rua Ana Neri, 6361 - Cristo Rei" },
-        { nome: "COLÉGIO MILITAR ALMIRANTE TAMANDARÉ (CRISTO REI)", votos: 59, secoes: 13, lat: -12.726541569828496, lon: -60.146935116370294, endereco: "Av. Melvin Jones, 1093" },
-        { nome: "MARTIM LUTERO - ESCOLA MUNICIPAL", votos: 51, secoes: 7, lat: -12.731230495396291, lon: -60.14251520731447, endereco: "Rua 594, S/N - Setor 06" },
-        { nome: "WILSON CAMARGO - ESCOLA ESTADUAL", votos: 49, secoes: 6, lat: -12.740258338619247, lon: -60.146329865857794, endereco: "Av. Capitão Castro, 3050" },
-        { nome: "HERMOGENES ROBERTO NOGUEIRA - ESCOLA MUNICIPAL", votos: 48, secoes: 9, lat: -12.724921313685885, lon: -60.14215862876185, endereco: "Av. Vitória Régia, 1420 - Setor 17" },
-        { nome: "SHIRLEI CERUTTI - ESCOLA ESTADUAL", votos: 47, secoes: 11, lat: -12.72541280387883, lon: -60.137755569404646, endereco: "Rua Josias Antônio da Silva, 145" },
-        { nome: "CAMARA MUNICIPAL DE VILHENA", votos: 46, secoes: 10, lat: -12.735789607427414, lon: -60.13342274359864, endereco: "Av. Tancredo Neves, S/N" },
-        { nome: "COLÉGIO MILITAR DOM PEDRO II (CECÍLIA MEIRELES)", votos: 45, secoes: 10, lat: -12.733255186299036, lon: -60.150656570277285, endereco: "Av. 706, S/N - BNH" },
-        { nome: "CEEJA - COLEGIO SUPLETIVO", votos: 42, secoes: 6, lat: -12.733548957086699, lon: -60.12834788905567, endereco: "Av. Benno Luiz Graebin, Centro" },
-        { nome: "PAULO FREIRE - ESCOLA ESTADUAL", votos: 41, secoes: 5, lat: -12.735497168965065, lon: -60.12674164442909, endereco: "Rua 11, 682 - Setor 04" },
-        { nome: "MARIZETI MENDES DE OLIVEIRA - ESCOLA ESTADUAL", votos: 41, secoes: 7, lat: -12.744510320139952, lon: -60.13637389904773, endereco: "Rua Domingos Linares, 450" },
-        { nome: "MACHADO DE ASSIS - ESCOLA ESTADUAL", votos: 39, secoes: 11, lat: -12.747409631187928, lon: -60.12019459326902, endereco: "Av. Tiradentes, 265" },
-        { nome: "MARECHAL RONDON - ESCOLA ESTADUAL", votos: 38, secoes: 13, lat: -12.742315468771679, lon: -60.151692413843506, endereco: "Av. Leopoldo Peres, 2550" },
-        { nome: "MARIO GRASSO - ESCOLA MUNICIPAL", votos: 32, secoes: 6, lat: -12.740063618206724, lon: -60.15753770339672, endereco: "Rua Belo Horizonte, S/N - Setor 21" },
-        { nome: "CASTELO BRANCO - ESCOLA MUNICIPAL - SETOR INDUSTRIAL", votos: 30, secoes: 5, lat: -12.760691061256, lon: -60.101775884093776, endereco: "BR-364 KM 08 - Setor Industrial" },
-        { nome: "ESCOLA MUNICIPAL FELIPE ROCHA DE LIMA", votos: 27, secoes: 6, lat: -12.73081063801945, lon: -60.09860095429499, endereco: "Rua 7612, QD 23 - Bairro União" },
-        { nome: "ESCOLA PROF, LUIZ CARLOS PAULO ASSIS", votos: 25, secoes: 4, lat: -12.737637098044209, lon: -60.10946120410142, endereco: "Av. Juraci Correia Muller, 6884" },
-        { nome: "NOEME BARROS PEREIRA - ESCOLA MUNICIPAL", votos: 23, secoes: 5, lat: -12.730518549428654, lon: -60.15419873092537, endereco: "Rua Augusto Nicolielo - Eldorado" },
-        { nome: "ESCOLA MUNICIPAL PROF, DIRCE BIANCHIN DE ÁVILA", votos: 21, secoes: 4, lat: -12.727431231261281, lon: -60.12357514189664, endereco: "Rua 1813, 5184 - Cidade Nova" },
-        { nome: "ESCOLA MUNICIPAL JOSÉ PAULO PAES", votos: 20, secoes: 4, lat: -12.71294125892242, lon: -60.143902545303554, endereco: "Av. Melvin Jones, 2625 - Bodanese" },
-        { nome: "RONALDO ARAGÃO - ESCOLA ESTADUAL", votos: 17, secoes: 4, lat: -12.742202288720174, lon: -60.15937218861313, endereco: "Rua Santa Luzia, 893" },
-        { nome: "ESCOLA MUNICIPAL LUIZ EDUARDO SILVA ROVER", votos: 14, secoes: 3, lat: -12.718856431928579, lon: -60.15288933088456, endereco: "Rua José Honório Ramos, QD 42" },
-        { nome: "APAE - ASSOCIAÇÃO DE PAIS E AMIGOS EXCEPCIONAIS", votos: 13, secoes: 4, lat: -12.73020655062552, lon: -60.15247010879228, endereco: "Av. Tancredo Neves, 2213" },
-        { nome: "PROGRESSO - ESCOLA MUNICIPAL - GLEBA GUAPORE", votos: 11, secoes: 1, lat: -12.718259698267707, lon: -60.167859195264995, endereco: "BR-399 KM 50 - Gleba Guaporé" },
-        { nome: "OMAR GODOY - ESCOLA MUNICIPAL", votos: 8, secoes: 3, lat: -12.729107523503988, lon: -60.13328520749438, endereco: "Av. Belo Horizonte, 4185" },
-        { nome: "TENENTE MELO - ESCOLA MUNICIPAL - CACHOEIRA", votos: 8, secoes: 1, lat: -12.721901420711848, lon: -60.16916144434592, endereco: "BR-364 KM 70 - Cachoeira" },
-        { nome: "MARIA PAULINA DONADON - ESCOLA MUNICIPAL - NOVA CONQUISTA", votos: 6, secoes: 3, lat: -12.71965672702878, lon: -60.170743211855864, endereco: "Distrito de Nova Conquista" },
-        { nome: "IQUEZINHA - ESCOLA MUNICIPAL", votos: 4, secoes: 2, lat: -12.715055936992563, lon: -60.16940009079044, endereco: "BR-174, KM 15" }
+        { nome: "IFRO - INSTITUTO FEDERAL DE RONDÔNIA", votos: 94, votos2022: 3, secoes: 10, lat: -12.704216, lon: -60.119101, endereco: "BR-174, KM 03, SN", zona: "urbana" },
+        { nome: "IVETE BRUSTOLIN - ESCOLA MUNICIPAL", votos: 93, votos2022: 5, secoes: 17, lat: -12.7238, lon: -60.1228, endereco: "Av. Paraná, 590 - QD 33 Setor 06", zona: "urbana" },
+        { nome: "COLÉGIO MILITAR TIRADENTES (ZILDA) ESCOLA ESTADUAL", votos: 89, votos2022: 3, secoes: 19, lat: -12.736752, lon: -60.118557, endereco: "Av. Benno Luiz Graebin, 5900", zona: "urbana" },
+        { nome: "ALVARES DE AZEVEDO - ESCOLA ESTADUAL", votos: 83, votos2022: 4, secoes: 16, lat: -12.743266, lon: -60.138760, endereco: "Av. Liberdade, 3950", zona: "urbana" },
+        { nome: "GENIVAL NUNES - ESCOLA ESTADUAL", votos: 76, votos2022: 6, secoes: 13, lat: -12.726430, lon: -60.110859, endereco: "Rua 907, 2078 - Setor 09", zona: "urbana" },
+        { nome: "VILMA VIEIRA - ESCOLA MUNICIPAL", votos: 73, votos2022: 9, secoes: 8, lat: -12.725393, lon: -60.106291, endereco: "Rua 916, S/N - Nova Vilhena", zona: "urbana" },
+        { nome: "MARIA ARLETE TOLEDO - ESCOLA ESTADUAL", votos: 67, votos2022: 17, secoes: 12, lat: -12.732304, lon: -60.112977, endereco: "Rua Ana Neri, 6361 - Cristo Rei", zona: "urbana" },
+        { nome: "COLÉGIO MILITAR ALMIRANTE TAMANDARÉ (CRISTO REI)", votos: 59, votos2022: 7, secoes: 13, lat: -12.726541, lon: -60.146935, endereco: "Av. Melvin Jones, 1093", zona: "urbana" },
+        { nome: "MARTIM LUTERO - ESCOLA MUNICIPAL", votos: 51, votos2022: 1, secoes: 7, lat: -12.731230, lon: -60.142515, endereco: "Rua 594, S/N - Setor 06", zona: "urbana" },
+        { nome: "WILSON CAMARGO - ESCOLA ESTADUAL", votos: 49, votos2022: 2, secoes: 6, lat: -12.740258, lon: -60.146329, endereco: "Av. Capitão Castro, 3050", zona: "urbana" },
+        { nome: "HERMOGENES ROBERTO NOGUEIRA - ESCOLA MUNICIPAL", votos: 48, votos2022: 7, secoes: 9, lat: -12.724921, lon: -60.142158, endereco: "Av. Vitória Régia, 1420 - Setor 17", zona: "urbana" },
+        { nome: "SHIRLEI CERUTTI - ESCOLA ESTADUAL", votos: 47, votos2022: 2, secoes: 11, lat: -12.725412, lon: -60.137755, endereco: "Rua Josias Antônio da Silva, 145", zona: "urbana" },
+        { nome: "CAMARA MUNICIPAL DE VILHENA", votos: 46, votos2022: 1, secoes: 10, lat: -12.735789, lon: -60.133422, endereco: "Av. Tancredo Neves, S/N", zona: "urbana" },
+        { nome: "COLÉGIO MILITAR DOM PEDRO II (CECÍLIA MEIRELES)", votos: 45, votos2022: 13, secoes: 10, lat: -12.733255, lon: -60.150656, endereco: "Av. 706, S/N - BNH", zona: "urbana" },
+        { nome: "CEEJA - COLEGIO SUPLETIVO", votos: 42, votos2022: 7, secoes: 6, lat: -12.733548, lon: -60.128347, endereco: "Av. Benno Luiz Graebin, Centro", zona: "urbana" },
+        { nome: "PAULO FREIRE - ESCOLA ESTADUAL", votos: 41, votos2022: 3, secoes: 5, lat: -12.735497, lon: -60.126741, endereco: "Rua 11, 682 - Setor 04", zona: "urbana" },
+        { nome: "MARIZETI MENDES DE OLIVEIRA - ESCOLA ESTADUAL", votos: 41, votos2022: 3, secoes: 7, lat: -12.744510, lon: -60.136373, endereco: "Rua Domingos Linares, 450", zona: "urbana" },
+        { nome: "MACHADO DE ASSIS - ESCOLA ESTADUAL", votos: 39, votos2022: 8, secoes: 11, lat: -12.747409, lon: -60.120194, endereco: "Av. Tiradentes, 265", zona: "urbana" },
+        { nome: "MARECHAL RONDON - ESCOLA ESTADUAL", votos: 38, votos2022: 16, secoes: 13, lat: -12.742315, lon: -60.151692, endereco: "Av. Leopoldo Peres, 2550", zona: "urbana" },
+        { nome: "MARIO GRASSO - ESCOLA MUNICIPAL", votos: 32, votos2022: 0, secoes: 6, lat: -12.740063, lon: -60.157537, endereco: "Rua Belo Horizonte, S/N - Setor 21", zona: "urbana" },
+        { nome: "CASTELO BRANCO - ESCOLA MUNICIPAL - SETOR INDUSTRIAL", votos: 30, votos2022: 0, secoes: 5, lat: -12.760691, lon: -60.101775, endereco: "BR-364 KM 08 - Setor Industrial", zona: "rural" },
+        { nome: "ESCOLA MUNICIPAL FELIPE ROCHA DE LIMA", votos: 27, votos2022: 0, secoes: 6, lat: -12.730810, lon: -60.098600, endereco: "Rua 7612, QD 23 - Bairro União", zona: "urbana" },
+        { nome: "ESCOLA PROF, LUIZ CARLOS PAULO ASSIS", votos: 25, votos2022: 0, secoes: 4, lat: -12.737637, lon: -60.109461, endereco: "Av. Juraci Correia Muller, 6884", zona: "urbana" },
+        { nome: "NOEME BARROS PEREIRA - ESCOLA MUNICIPAL", votos: 23, votos2022: 5, secoes: 5, lat: -12.730518, lon: -60.154198, endereco: "Rua Augusto Nicolielo - Eldorado", zona: "urbana" },
+        { nome: "ESCOLA MUNICIPAL PROF, DIRCE BIANCHIN DE ÁVILA", votos: 21, votos2022: 0, secoes: 4, lat: -12.727431, lon: -60.123575, endereco: "Rua 1813, 5184 - Cidade Nova", zona: "urbana" },
+        { nome: "ESCOLA MUNICIPAL JOSÉ PAULO PAES", votos: 20, votos2022: 0, secoes: 4, lat: -12.712941, lon: -60.143902, endereco: "Av. Melvin Jones, 2625 - Bodanese", zona: "urbana" },
+        { nome: "RONALDO ARAGÃO - ESCOLA ESTADUAL", votos: 17, votos2022: 0, secoes: 4, lat: -12.742202, lon: -60.159372, endereco: "Rua Santa Luzia, 893", zona: "urbana" },
+        { nome: "ESCOLA MUNICIPAL LUIZ EDUARDO SILVA ROVER", votos: 14, votos2022: 0, secoes: 3, lat: -12.718856, lon: -60.152889, endereco: "Rua José Honório Ramos, QD 42", zona: "urbana" },
+        { nome: "APAE - ASSOCIAÇÃO DE PAIS E AMIGOS EXCEPCIONAIS", votos: 13, votos2022: 7, secoes: 4, lat: -12.730206, lon: -60.152470, endereco: "Av. Tancredo Neves, 2213", zona: "urbana" },
+        { nome: "PROGRESSO - ESCOLA MUNICIPAL - GLEBA GUAPORE", votos: 11, votos2022: 2, secoes: 1, lat: -12.718259, lon: -60.167859, endereco: "BR-399 KM 50 - Gleba Guaporé", zona: "rural" },
+        { nome: "OMAR GODOY - ESCOLA MUNICIPAL", votos: 8, votos2022: 3, secoes: 3, lat: -12.729107, lon: -60.133285, endereco: "Av. Belo Horizonte, 4185", zona: "urbana" },
+        { nome: "TENENTE MELO - ESCOLA MUNICIPAL - CACHOEIRA", votos: 8, votos2022: 0, secoes: 1, lat: -12.721901, lon: -60.169161, endereco: "BR-364 KM 70 - Cachoeira", zona: "rural" },
+        { nome: "MARIA PAULINA DONADON - ESCOLA MUNICIPAL - NOVA CONQUISTA", votos: 6, votos2022: 2, secoes: 3, lat: -12.719656, lon: -60.170743, endereco: "Distrito de Nova Conquista", zona: "rural" },
+        { nome: "IQUEZINHA - ESCOLA MUNICIPAL", votos: 4, votos2022: 0, secoes: 2, lat: -12.715055, lon: -60.169400, endereco: "BR-174, KM 15", zona: "rural" }
     ];
 
-    const TOTAL_GERAL = 1380;
+    const TOTAL_GERAL_2026 = 1380;
+    const TOTAL_GERAL_2022 = 143;
 
-    // 2. Inicializar o Mapa
+    // 2. Estado Global da Aplicação
+    let currentPerfFilter = 'all';
+    let currentZoneFilter = 'all';
+    let mapMode = 'circles'; // 'circles' ou 'heat'
+    let heatLayer = null;
+    let circleGroup = L.layerGroup();
+    let labelGroup = L.layerGroup();
+    let chartInstances = {};
+
+    // 3. Inicialização do Mapa
     const map = L.map('map', {
-        center: [-12.7380, -60.1350],
+        center: [-12.7350, -60.1350],
         zoom: 13,
         zoomControl: true
     });
 
-    // Fontes do Mapa (ArcGIS Esri & OpenStreetMap)
     const esriStreet = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Esri World Street Map',
-        maxZoom: 19
+        attribution: 'Esri World Street Map', maxZoom: 19
     }).addTo(map);
 
     const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19
+        attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
     });
 
     const esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Esri Topographic',
-        maxZoom: 19
+        attribution: 'Esri Topographic', maxZoom: 19
     });
 
     L.control.layers({
@@ -332,106 +725,158 @@
         "Esri Topo": esriTopo
     }).addTo(map);
 
-    // Garantir renderização imediata do Leaflet ao carregar
-    setTimeout(() => {
-        map.invalidateSize();
-    }, 250);
+    circleGroup.addTo(map);
+    labelGroup.addTo(map);
 
-    window.addEventListener('resize', () => {
-        map.invalidateSize();
-    });
+    setTimeout(() => map.invalidateSize(), 250);
+    window.addEventListener('resize', () => map.invalidateSize());
 
-    // 3. Renderizar as Bolas Azuis e os Números de Votos
+    // 4. Renderização do Mapa (Círculos vs Calor)
     const markersMap = {};
 
-    locaisData.forEach(item => {
-        const pct = ((item.votos / TOTAL_GERAL) * 100).toFixed(1);
-        const radius = Math.max(12, Math.round(item.votos * 0.38));
+    function renderMapElements(filteredData) {
+        circleGroup.clearLayers();
+        labelGroup.clearLayers();
+        if (heatLayer) map.removeLayer(heatLayer);
 
-        // Círculo Azul Proporcional
-        const circle = L.circleMarker([item.lat, item.lon], {
-            radius: radius,
-            fillColor: "#1E88E5",
-            color: "#0D47A1",
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.85
-        }).addTo(map);
+        if (mapMode === 'circles') {
+            filteredData.forEach(item => {
+                const pct = ((item.votos / TOTAL_GERAL_2026) * 100).toFixed(1);
+                const radius = Math.max(12, Math.round(item.votos * 0.38));
+                const diff = item.votos - item.votos2022;
+                const diffText = diff >= 0 ? `+${diff}` : `${diff}`;
 
-        // Tooltip ao passar a seta (Hover)
-        circle.bindTooltip(`
-            <div style="font-weight: bold; font-size: 0.9rem;">${item.nome}</div>
-            <div style="margin-top:2px;">Total de Votos: <b>${item.votos}</b> (${pct}%)</div>
-            <div style="font-size: 0.75rem; color: #cbd5e1;">${item.endereco}</div>
-        `, {
-            className: 'custom-tooltip',
-            direction: 'top',
-            offset: [0, -radius]
-        });
+                // Círculo Azul
+                const circle = L.circleMarker([item.lat, item.lon], {
+                    radius: radius,
+                    fillColor: "#1E88E5",
+                    color: "#0D47A1",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.85
+                });
 
-        // Popup ao Clicar
-        circle.bindPopup(`
-            <div style="font-weight:bold; color:#0d47a1; font-size:0.95rem; margin-bottom:4px;">${item.nome}</div>
-            <div style="font-size:0.85rem;"><b>Votos:</b> ${item.votos} (${pct}% do total)</div>
-            <div style="font-size:0.85rem;"><b>Seções:</b> ${item.secoes}</div>
-            <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">${item.endereco}</div>
-        `);
+                circle.bindTooltip(`
+                    <div style="font-weight: bold; font-size: 0.88rem;">${item.nome}</div>
+                    <div style="margin-top:3px;">Votos 2026: <b>${item.votos}</b> (${pct}%)</div>
+                    <div>Votos 2022: <b>${item.votos2022}</b> (Crescimento: <b style="color:#4ade80">${diffText}</b>)</div>
+                    <div style="font-size: 0.72rem; color: #cbd5e1; margin-top:2px;">${item.endereco}</div>
+                `, { className: 'custom-tooltip', direction: 'top', offset: [0, -radius] });
 
-        // Número de Votos em Texto Branco dentro da Bola
-        const fontSize = Math.max(9, Math.round(radius * 0.7));
-        const labelIcon = L.divIcon({
-            html: `<div class="vote-circle-label" style="font-size: ${fontSize}px;">${item.votos}</div>`,
-            className: '',
-            iconSize: [radius * 2, radius * 2],
-            iconAnchor: [radius, radius]
-        });
+                circle.bindPopup(`
+                    <div style="font-weight:bold; color:#0d47a1; font-size:0.95rem; margin-bottom:4px;">${item.nome}</div>
+                    <div style="font-size:0.85rem;"><b>Votos 2026:</b> ${item.votos} (${pct}%)</div>
+                    <div style="font-size:0.85rem;"><b>Votos 2022:</b> ${item.votos2022}</div>
+                    <div style="font-size:0.85rem;"><b>Crescimento:</b> <span style="color:#16a34a; font-weight:bold;">${diffText} votos</span></div>
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">${item.endereco}</div>
+                `);
 
-        const labelMarker = L.marker([item.lat, item.lon], { 
-            icon: labelIcon, 
-            interactive: false 
-        }).addTo(map);
+                circleGroup.addLayer(circle);
 
-        markersMap[item.nome] = { circle, labelMarker, data: item };
-    });
+                // Texto Interno com Votos
+                const fontSize = Math.max(9, Math.round(radius * 0.7));
+                const labelIcon = L.divIcon({
+                    html: `<div class="vote-circle-label" style="font-size: ${fontSize}px;">${item.votos}</div>`,
+                    className: '',
+                    iconSize: [radius * 2, radius * 2],
+                    iconAnchor: [radius, radius]
+                });
 
-    // 4. Lógica do Painel Lateral e Pesquisa
+                const labelMarker = L.marker([item.lat, item.lon], { icon: labelIcon, interactive: false });
+                labelGroup.addLayer(labelMarker);
+
+                markersMap[item.nome] = { circle, labelMarker };
+            });
+        } else if (mapMode === 'heat') {
+            const heatPoints = filteredData.map(item => [item.lat, item.lon, item.votos / 100]);
+            heatLayer = L.heatLayer(heatPoints, {
+                radius: 35,
+                blur: 20,
+                maxZoom: 15,
+                max: 1.0,
+                gradient: { 0.2: 'blue', 0.4: 'cyan', 0.6: 'lime', 0.8: 'yellow', 1.0: 'red' }
+            }).addTo(map);
+        }
+    }
+
+    function setMapMode(mode) {
+        mapMode = mode;
+        document.getElementById('btnModeCircles').classList.toggle('active', mode === 'circles');
+        document.getElementById('btnModeHeat').classList.toggle('active', mode === 'heat');
+        renderListAndMap();
+    }
+
+    // 5. Lógica de Filtros e Renderização da Lista
     const locationsListEl = document.getElementById('locationsList');
     const searchInput = document.getElementById('searchInput');
     const sortSelect = document.getElementById('sortSelect');
 
-    function renderList() {
+    function setPerfFilter(perf, btn) {
+        currentPerfFilter = perf;
+        btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderListAndMap();
+    }
+
+    function setZoneFilter(zone, btn) {
+        currentZoneFilter = zone;
+        btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderListAndMap();
+    }
+
+    function getFilteredData() {
         const query = searchInput.value.toLowerCase().trim();
         const sortVal = sortSelect.value;
 
-        let filtered = locaisData.filter(item => 
-            item.nome.toLowerCase().includes(query) || 
-            item.endereco.toLowerCase().includes(query)
-        );
+        let filtered = locaisData.filter(item => {
+            const matchQuery = item.nome.toLowerCase().includes(query) || item.endereco.toLowerCase().includes(query);
+            
+            let matchPerf = true;
+            if (currentPerfFilter === 'low') matchPerf = item.votos < 20;
+            else if (currentPerfFilter === 'med') matchPerf = item.votos >= 20 && item.votos <= 50;
+            else if (currentPerfFilter === 'high') matchPerf = item.votos > 50;
 
-        if (sortVal === 'votos-desc') {
-            filtered.sort((a, b) => b.votos - a.votos);
-        } else if (sortVal === 'votos-asc') {
-            filtered.sort((a, b) => a.votos - b.votos);
-        } else if (sortVal === 'nome-asc') {
-            filtered.sort((a, b) => a.nome.localeCompare(b.nome));
-        }
+            let matchZone = true;
+            if (currentZoneFilter === 'urbana') matchZone = item.zona === 'urbana';
+            else if (currentZoneFilter === 'rural') matchZone = item.zona === 'rural';
+
+            return matchQuery && matchPerf && matchZone;
+        });
+
+        if (sortVal === 'votos-desc') filtered.sort((a, b) => b.votos - a.votos);
+        else if (sortVal === 'votos-asc') filtered.sort((a, b) => a.votos - b.votos);
+        else if (sortVal === 'crescimento-desc') filtered.sort((a, b) => (b.votos - b.votos2022) - (a.votos - a.votos2022));
+        else if (sortVal === 'nome-asc') filtered.sort((a, b) => a.nome.localeCompare(b.nome));
+
+        return filtered;
+    }
+
+    function renderListAndMap() {
+        const filtered = getFilteredData();
+        renderMapElements(filtered);
 
         locationsListEl.innerHTML = '';
 
         filtered.forEach(item => {
+            const diff = item.votos - item.votos2022;
             const div = document.createElement('div');
             div.className = 'location-item';
             div.innerHTML = `
                 <div class="location-info">
                     <div class="location-name">${item.nome}</div>
                     <div class="location-address">${item.endereco}</div>
+                    <div class="location-stats-mini">
+                        <span>2022: <b>${item.votos2022}</b></span> • 
+                        <span>Crescimento: <span class="badge-growth">+${diff}</span></span>
+                    </div>
                 </div>
                 <div class="location-badge">${item.votos}</div>
             `;
 
             div.addEventListener('mouseenter', () => {
                 const markerObj = markersMap[item.nome];
-                if (markerObj) {
+                if (markerObj && mapMode === 'circles') {
                     markerObj.circle.setStyle({ fillColor: '#FFD700', color: '#B8860B', fillOpacity: 1 });
                     markerObj.circle.openTooltip();
                 }
@@ -439,7 +884,7 @@
 
             div.addEventListener('mouseleave', () => {
                 const markerObj = markersMap[item.nome];
-                if (markerObj) {
+                if (markerObj && mapMode === 'circles') {
                     markerObj.circle.setStyle({ fillColor: '#1E88E5', color: '#0D47A1', fillOpacity: 0.85 });
                     markerObj.circle.closeTooltip();
                 }
@@ -447,17 +892,139 @@
 
             div.addEventListener('click', () => {
                 map.flyTo([item.lat, item.lon], 15, { duration: 1 });
-                markersMap[item.nome].circle.openPopup();
+                if (markersMap[item.nome] && mapMode === 'circles') {
+                    markersMap[item.nome].circle.openPopup();
+                }
             });
 
             locationsListEl.appendChild(div);
         });
     }
 
-    searchInput.addEventListener('input', renderList);
-    sortSelect.addEventListener('change', renderList);
+    searchInput.addEventListener('input', renderListAndMap);
+    sortSelect.addEventListener('change', renderListAndMap);
 
-    renderList();
+    // 6. Navegação entre Abas
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        event.currentTarget.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+
+        if (tabId === 'tab-graficos') {
+            initCharts();
+        }
+    }
+
+    // 7. Renderização dos Gráficos Interativos (Chart.js)
+    function initCharts() {
+        if (chartInstances.evolucao) return; // Já inicializado
+
+        // Chart 1: Evolução Total
+        const ctxTotal = document.getElementById('chartEvolucaoTotal').getContext('2d');
+        chartInstances.evolucao = new Chart(ctxTotal, {
+            type: 'bar',
+            data: {
+                labels: ['Eleição 2022', 'Eleição 2026'],
+                datasets: [{
+                    label: 'Votos Apurados',
+                    data: [TOTAL_GERAL_2022, TOTAL_GERAL_2026],
+                    backgroundColor: ['#94a3b8', '#0d47a1'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Chart 2: Top 10 Escolas
+        const top10Data = [...locaisData].sort((a, b) => b.votos - a.votos).slice(0, 10);
+        const ctxTop10 = document.getElementById('chartTop10').getContext('2d');
+        chartInstances.top10 = new Chart(ctxTop10, {
+            type: 'bar',
+            data: {
+                labels: top10Data.map(d => d.nome.split('-')[0].trim()),
+                datasets: [{
+                    label: 'Votos em 2026',
+                    data: top10Data.map(d => d.votos),
+                    backgroundColor: '#1e88e5',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Chart 3: Faixas de Desempenho
+        const low = locaisData.filter(d => d.votos < 20).length;
+        const med = locaisData.filter(d => d.votos >= 20 && d.votos <= 50).length;
+        const high = locaisData.filter(d => d.votos > 50).length;
+
+        const ctxFaixas = document.getElementById('chartFaixas').getContext('2d');
+        chartInstances.faixas = new Chart(ctxFaixas, {
+            type: 'doughnut',
+            data: {
+                labels: ['Baixo (<20)', 'Médio (20-50)', 'Alto (>50)'],
+                datasets: [{
+                    data: [low, med, high],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // Chart 4: Comparativo Completo por Local
+        const ctxComp = document.getElementById('chartComparativoLocais').getContext('2d');
+        chartInstances.comp = new Chart(ctxComp, {
+            type: 'bar',
+            data: {
+                labels: locaisData.map(d => d.nome.substring(0, 18) + '...'),
+                datasets: [
+                    { label: 'Votos 2022', data: locaisData.map(d => d.votos2022), backgroundColor: '#cbd5e1' },
+                    { label: 'Votos 2026', data: locaisData.map(d => d.votos), backgroundColor: '#0d47a1' }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                scales: { x: { stacked: false }, y: { stacked: false } },
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+
+    // 8. Exportação para CSV / Excel
+    function exportCSV() {
+        const filtered = getFilteredData();
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Local de Votacao;Zona;Votos 2022;Votos 2026;Crescimento;Endereco;Latitude;Longitude\n";
+
+        filtered.forEach(item => {
+            const diff = item.votos - item.votos2022;
+            csvContent += `"${item.nome}";"${item.zona.toUpperCase()}";${item.votos2022};${item.votos};${diff};"${item.endereco}";${item.lat};${item.lon}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "Votacao_Thiago_Flores_Vilhena.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Inicialização da primeira tela
+    renderListAndMap();
 </script>
 
 </body>
